@@ -1,11 +1,7 @@
 use std::{
     fs,
-    rc::Rc,
     sync::{
-        self,
-        atomic::AtomicBool,
-        mpsc::{self, Receiver, RecvError},
-        Arc, Mutex,
+        mpsc::{self, Receiver},
     },
     time::SystemTime,
 };
