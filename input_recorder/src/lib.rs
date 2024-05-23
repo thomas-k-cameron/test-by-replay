@@ -1,5 +1,5 @@
 use std::{
-    borrow::Cow, fs::{self, File}, sync::{
+    borrow::Cow, fs::{self, File}, path::Path, sync::{
         atomic::AtomicBool,
         mpsc::{self, Receiver},
     }, time::{SystemTime, UNIX_EPOCH}
@@ -19,7 +19,7 @@ pub fn main() {
             })
             .unwrap();
         };
-        
+
         if cfg!(target_os = "macos") {
             loop {
                 func();
@@ -56,7 +56,6 @@ pub fn main() {
     let mut file_path = uuid::Uuid::new_v4().to_string();
     let mut fp = File::create(file_path).unwrap();
 
-
     let mut s = "".to_string();
     for i in slice {
         let mut jsonstr = serde_json::to_string(&i).unwrap();
@@ -64,9 +63,8 @@ pub fn main() {
         s.push('\n');
         s.shrink_to_fit();
     }
-    
+
     zstd::stream::copy_encode(std::io::Cursor::new(jsonstr), fp, 5);
-    
 }
 
 pub fn replay(slice: Box<[(SystemTime, EventType)]>) {
@@ -77,6 +75,9 @@ pub fn replay(slice: Box<[(SystemTime, EventType)]>) {
     }
 }
 
-pub fn stream_file() {
-    
+pub fn stream_file(path: impl AsRef<Path>) -> Box<[(SystemTime, EventType)]> {
+    let slice = zstd::decode_all(std::fs::File::open(path).unwrap())
+        .unwrap()
+        .into_boxed_slice();
+    serde_json::from_slice(&slice).unwrap()
 }
