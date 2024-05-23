@@ -8,12 +8,10 @@ use std::{
 use rdev::{Event, EventType, Key};
 
 pub fn main() {
-    let mut check = AtomicBool::new(false);
     let (tx, rx) = mpsc::channel();
     std::thread::spawn(move || {
+        let tx = tx.clone();
         let mut func = || {
-            let tx = tx.clone();
-            let mut check = false;
             rdev::listen(move |event| {
                 let _ = tx.send((event.time, event));
             })
@@ -49,10 +47,11 @@ pub fn main() {
         stack2
     });
 
+    
     let mut s = th.join().unwrap();
     s.dedup();
     let slice = s.into_boxed_slice();
-
+    
     let mut file_path = uuid::Uuid::new_v4().to_string();
     let mut fp = File::create(file_path).unwrap();
 
